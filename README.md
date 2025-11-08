@@ -1,13 +1,31 @@
-# Install Tkinder
-
-- Windows
+# Install Invoke
 
 ```cmd
-python -m tkinter
+    pip install invoke
 ```
 
-- Linux
+## Show list task
 
-```bash
-sudo apt install python3-tk python3-pil.imagetk
+```cmd
+    invoke --list
+```
+
+# Setup Env
+
+## 1. Create venv
+
+```cmd
+    invoke env
+```
+
+## 2. Install deps in `requirements.txt`
+
+```cmd
+    invoke install
+```
+
+# Run app
+
+```cmd
+    invoke main
 ```
