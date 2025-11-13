@@ -9,9 +9,16 @@ from src.const import (
     DOWNLOAD_FOLDER,
 )
 from src.core import generate_bills_from_html, merge_pdfs_in_folder
-from src.text import SELECT_FILE_PLACEHOLDER, PROCESS_FILE_SUCCESS, PROCESS_FILE_FAILED
 from src.settings import app_settings
 from src.utils import get_cur_datetime
+from src.text import (
+    SELECT_FILE_PLACEHOLDER,
+    EMPTY_FILE_NAME,
+    CHOOSE_FILE,
+    CREATE_PDF,
+    CREATE_SUCCESS,
+    PDF_OUTPUT_MSG,
+)
 
 selected_excel_file = None
 
@@ -32,7 +39,7 @@ def generate_bills_click(output_folder):
 
         merge_pdfs_in_folder(folder_path=folder_dump_path, output_path=file_pdf_merge_path)
 
-        messagebox.showinfo("Success", f"PDFs have been generated and saved to:\n{output_folder}")
+        messagebox.showinfo(CREATE_SUCCESS, PDF_OUTPUT_MSG.format(output_folder))
 
         os.startfile(output_folder)
 
@@ -68,7 +75,7 @@ def choose_file(label):
     """Open file dialog to choose Excel file and update label"""
     global selected_excel_file
     file_path = filedialog.askopenfilename(
-        title="Select Excel File", filetypes=[("Excel files", "*.xlsx"), ("All files", "*.*")]
+        title=SELECT_FILE_PLACEHOLDER, filetypes=[("Excel files", "*.xlsx"), ("All files", "*.*")]
     )
     print(file_path)
     if file_path:
@@ -85,13 +92,11 @@ def create_main_window():
     create_menu(root)
 
     # Label to show selected file
-    file_label = tk.Label(root, text="No file selected")
+    file_label = tk.Label(root, text=EMPTY_FILE_NAME)
     file_label.pack(pady=10)
 
     # Button to choose Excel file
-    btn_choose = tk.Button(
-        root, text="📁 Choose Excel File", command=lambda: choose_file(file_label)
-    )
+    btn_choose = tk.Button(root, text=CHOOSE_FILE, command=lambda: choose_file(file_label))
     btn_choose.pack(pady=10)
 
     output_folder = DOWNLOAD_FOLDER
@@ -100,7 +105,7 @@ def create_main_window():
 
     btn_generate = tk.Button(
         root,
-        text="📄 Generate PDFs",
+        text=CREATE_PDF,
         command=lambda: generate_bills_click(output_folder),
         height=2,
         width=25,

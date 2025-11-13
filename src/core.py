@@ -8,23 +8,29 @@ from jinja2 import Template
 from PyPDF2 import PdfMerger
 
 from src.const import ROOT_PATH
-from src.const import TEMPLATE_FILE, OUTPUT_DIR, WKHTMLTOPDF_PATH, DOWNLOAD_FOLDER, HISTORY_FOLDER
+from src.const import DEBUG, WKHTMLTOPDF_PATH, IS_FROZEN
 from src.utils import no_accent_vietnamese, get_cur_datetime
-
-config = pdfkit.configuration(wkhtmltopdf=WKHTMLTOPDF_PATH)
 
 # ---------------------------
 # Handle font embedding
 # ---------------------------
-if getattr(sys, 'frozen', False):
-    # PyInstaller: font is bundled inside _MEIPASS
-    FONT_SRC_PATH = os.path.join(sys._MEIPASS, "fonts", "DejaVuSans.ttf")
-else:
-    FONT_SRC_PATH = os.path.join(ROOT_PATH, "fonts", "DejaVuSans.ttf")
 
-# Copy font to temp folder so wkhtmltopdf can access it
-TEMP_FONT_PATH = os.path.join(tempfile.gettempdir(), "DejaVuSans.ttf")
-shutil.copyfile(FONT_SRC_PATH, TEMP_FONT_PATH)
+
+def prepare_wkhtmltopdf_font(wkhtmltopdf_path, font_filename="DejaVuSans.ttf", font_folder="fonts"):
+
+    config = pdfkit.configuration(wkhtmltopdf=wkhtmltopdf_path)
+    FONT_SRC_PATH = os.path.join(
+        sys._MEIPASS if IS_FROZEN else ROOT_PATH, font_folder, font_filename
+    )
+
+    # Copy font to temp folder so wkhtmltopdf can access it
+    TEMP_FONT_PATH = os.path.join(tempfile.gettempdir(), "DejaVuSans.ttf")
+    shutil.copyfile(FONT_SRC_PATH, TEMP_FONT_PATH)
+
+    return config, TEMP_FONT_PATH
+
+
+config, TEMP_FONT_PATH = prepare_wkhtmltopdf_font(wkhtmltopdf_path=WKHTMLTOPDF_PATH)
 
 
 def _fill_template_with_data(template, data):
@@ -81,8 +87,9 @@ def generate_bills_from_html(excel_path, template_path, output_folder):
         student_name = no_accent_vietnamese(str(data.get("Name", f"Unknown")))
         pdf_path = os.path.join(output_folder, f"{i}_{student_name}_bill.pdf")
 
-        with open("debug.html", "w", encoding="utf-8") as f:
-            f.write(html_content)
+        if DEBUG:
+            with open("debug.html", "w", encoding="utf-8") as f:
+                f.write(html_content)
 
         # 4️⃣ Convert to PDF
         pdfkit.from_string(html_content, pdf_path, configuration=config, options=options)
@@ -108,17 +115,3 @@ def merge_pdfs_in_folder(folder_path, output_path):
 
     merger.write(output_path)
     merger.close()
-
-
-if __name__ == "__main__":
-    # test_excel = os.path.join(ROOT_PATH, "test", "in", "tien_hoc.xlsx")
-    # folder_dump = get_cur_datetime()
-    # file_pdf_merge_name = DOWNLOAD_FOLDER / f"{folder_dump}.pdf"
-    # print(file_pdf_merge_name)
-    print(HISTORY_FOLDER)
-    import tkinter
-
-    print(tkinter.TkVersion)
-    print(tkinter.__file__)
-
-    print(tkinter.Tcl().eval('info library'))

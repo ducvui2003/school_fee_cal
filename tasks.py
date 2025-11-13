@@ -6,7 +6,6 @@ import os
 NAME = "HanhPhuc"
 ISCC = r'"C:\Program Files (x86)\Inno Setup 6\ISCC.exe"'
 
-P
 
 # Detect the OS
 IS_WINDOWS = platform.system() == "Windows"
@@ -19,14 +18,15 @@ VENV_PYTHON = os.path.join(VENV_BIN, "python")
 VENV_ACTIVATE = os.path.join(VENV_BIN, "activate")
 
 # 🔧 Paths to your Tcl/Tk installation (adjust as needed)
-TCL_PATH = r"C:\Users\ducvu\AppData\Local\Programs\Python\Python313\tcl\tcl8.6"
-TK_PATH = r"C:\Users\ducvu\AppData\Local\Programs\Python\Python313\tcl\tk8.6"
+TCL_PATH = r"C:\Users\ducvu\AppData\Local\Programs\Python\Python314\tcl\tcl8.6"
+TK_PATH = r"C:\Users\ducvu\AppData\Local\Programs\Python\Python314\tcl\tk8.6"
 
 
 @task
 def env(c):
     """Create virtual environment"""
     print("Creating virtual environment...")
+    c.run(f'rmdir /S /Q "./.venv"')
     c.run(f"{PYTHON} -m venv {VENV_DIR}")
     msg = (
         f"Run '{VENV_DIR}\\Scripts\\activate' to activate the venv (Windows)"
@@ -53,13 +53,13 @@ def add(c, name):
 def remove(c, name):
     """Uninstall a package and update requirements.txt"""
     c.run(f"{VENV_PYTHON} -m pip uninstall -y {name}")
-    c.run(f"{VENV_PYTHON} -m pip freeze > requirements.txt")
+    freeze(c)
 
 
 @task
 def freeze(c):
     """Freeze current dependencies to requirements.txt"""
-    c.run(f"{VENV_PYTHON} -m pip freeze > requirements.txt")
+    c.run(f"{VENV_PYTHON} -m pip list --not-required --format=freeze > requirements.txt")
 
 
 def _env_with_tk():
@@ -74,14 +74,14 @@ def _env_with_tk():
 def main(c):
     """Run the main app"""
     print("Running application with Tkinter fix...")
-    c.run(f"{VENV_PYTHON} -m src.main", env=_env_with_tk())
+    c.run(f"{VENV_PYTHON} -m src.main", env={"APP_ENV": "dev"})
 
 
 @task
 def run(c, path):
     """Run the main app"""
     print("Running application with Tkinter fix...")
-    c.run(f"{VENV_PYTHON} -m {path}", env=_env_with_tk())
+    c.run(f"{VENV_PYTHON} -m {path}")
 
 
 @task
@@ -90,15 +90,9 @@ def build(c):
     print("🚀 Building executable...")
 
     cmd = (
-        f'python -m PyInstaller '
-        '--onedir --windowed '
+        f'{VENV_PYTHON} -m PyInstaller '
+        '--onefile --windowed '
         f'--name "{NAME}" '
-        '--hidden-import=_tkinter '
-        '--hidden-import=tkinter '
-        '--add-data "C:/Users/ducvu/AppData/Local/Programs/Python/Python313/tcl/tcl8.6;_tcl_data/tcl8.6" '
-        '--add-data "C:/Users/ducvu/AppData/Local/Programs/Python/Python313/tcl/tk8.6;_tcl_data/tk8.6" '
-        '--add-data "C:/Users/ducvu/AppData/Local/Programs/Python/Python313/DLLs/tcl86t.dll;_tk_data" '
-        '--add-data "C:/Users/ducvu/AppData/Local/Programs/Python/Python313/DLLs/tk86t.dll;_tk_data" '
         '--add-data "templates;templates" '
         '--add-data "fonts;fonts" '
         '--add-data "libs;libs" '

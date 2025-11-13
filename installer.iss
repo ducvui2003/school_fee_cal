@@ -1,21 +1,23 @@
-; ==============================================
-; Inno Setup script for your Tkinter App
-; ==============================================
-
 [Setup]
-AppName=Tính tiền học Hạnh Phúc
+AppName=HanhPhuc
 AppVersion=1.0.0
 DefaultDirName={autopf}\HanhPhuc
-DefaultGroupName=Hanh Phuc
-OutputDir=installer
-OutputBaseFilename=HanhPhucSetup
+DefaultGroupName=HanhPhuc
+OutputDir=output
+OutputBaseFilename=HanhPhucInstaller
 Compression=lzma
 SolidCompression=yes
-PrivilegesRequired=lowest
+UninstallDisplayIcon={app}\HanhPhuc.exe
 
 [Files]
-; Include your packaged app folder
-Source: "build\HanhPhuc\*"; DestDir: "{app}"; Flags: recursesubdirs
+Source: "dist\HanhPhuc.exe"; DestDir: "{app}"; Flags: ignoreversion
+
+[Icons]
+Name: "{group}\HanhPhuc"; Filename: "{app}\HanhPhuc.exe"
+Name: "{commondesktop}\HanhPhuc"; Filename: "{app}\HanhPhuc.exe"; Tasks: desktopicon
+
+[Tasks]
+Name: "desktopicon"; Description: "Create a &desktop shortcut"; GroupDescription: "Additional icons:"
 
 [Run]
-Filename: "{app}\HanhPhuc.exe"; Description: "Launch App"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\HanhPhuc.exe"; Description: "Launch HanhPhuc"; Flags: nowait postinstall skipifsilent
