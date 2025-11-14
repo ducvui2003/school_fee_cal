@@ -29,3 +29,6 @@
 ```cmd
     invoke main
 ```
+# Inno Setup
+
+[link](https://jrsoftware.org/isdl.php)

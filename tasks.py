@@ -26,7 +26,9 @@ TK_PATH = r"C:\Users\ducvu\AppData\Local\Programs\Python\Python314\tcl\tk8.6"
 def env(c):
     """Create virtual environment"""
     print("Creating virtual environment...")
-    c.run(f'rmdir /S /Q "./.venv"')
+    if os.path.isdir(".venv"):
+        print("Removing existing .venv directory...")
+        shutil.rmtree(".venv")
     c.run(f"{PYTHON} -m venv {VENV_DIR}")
     msg = (
         f"Run '{VENV_DIR}\\Scripts\\activate' to activate the venv (Windows)"
@@ -99,8 +101,12 @@ def build(c):
         'src/main.py'
     )
     print("Delete old build")
-    c.run(f'rmdir /S /Q "./dist"')
-    c.run(f'rmdir /S /Q "./build"')
+    if os.path.isdir("dist"):
+        print("Removing existing dist directory...")
+        shutil.rmtree("dist")
+    if os.path.isdir("build"):
+        print("Removing existing build directory...")
+        shutil.rmtree("build")
     c.run(cmd, pty=False)
     print("✅ Build complete! Check the /dist folder.")
 
