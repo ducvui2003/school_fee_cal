@@ -6,31 +6,36 @@ import pdfkit
 import pandas as pd
 from jinja2 import Template
 from PyPDF2 import PdfMerger
-
+from datetime import date
 from src.const import ROOT_PATH
 from src.const import DEBUG, WKHTMLTOPDF_PATH, IS_FROZEN
-from src.utils import no_accent_vietnamese, get_cur_datetime
+from src.utils import no_accent_vietnamese, format_vnd, clean_decimal
 
 # ---------------------------
 # Handle font embedding
 # ---------------------------
 
 
-def prepare_wkhtmltopdf_font(wkhtmltopdf_path, font_filename="DejaVuSans.ttf", font_folder="fonts"):
+def prepare_wkhtmltopdf_font(wkhtmltopdf_path):
 
     config = pdfkit.configuration(wkhtmltopdf=wkhtmltopdf_path)
     FONT_SRC_PATH = os.path.join(
-        sys._MEIPASS if IS_FROZEN else ROOT_PATH, font_folder, font_filename
+        sys._MEIPASS if IS_FROZEN else ROOT_PATH, 'fonts', "DejaVuSans.ttf"
     )
-
     # Copy font to temp folder so wkhtmltopdf can access it
     TEMP_FONT_PATH = os.path.join(tempfile.gettempdir(), "DejaVuSans.ttf")
     shutil.copyfile(FONT_SRC_PATH, TEMP_FONT_PATH)
 
-    return config, TEMP_FONT_PATH
+    FONT_SRC_QR = os.path.join(
+        sys._MEIPASS if IS_FROZEN else ROOT_PATH, 'images', "qr.png"
+    )
+    TEMP_QR_PATH = os.path.join(tempfile.gettempdir(), "qr.png")
+    shutil.copyfile(FONT_SRC_QR, TEMP_QR_PATH)
+
+    return config, TEMP_FONT_PATH, TEMP_QR_PATH
 
 
-config, TEMP_FONT_PATH = prepare_wkhtmltopdf_font(wkhtmltopdf_path=WKHTMLTOPDF_PATH)
+config, TEMP_FONT_PATH, TEMP_QR_PATH = prepare_wkhtmltopdf_font(wkhtmltopdf_path=WKHTMLTOPDF_PATH)
 
 
 def _fill_template_with_data(template, data):
@@ -47,6 +52,27 @@ def _fill_template_with_data(template, data):
 def read_excel(excel_path):
     df = pd.read_excel(excel_path, header=0, skiprows=[1, 2])
     df = df.dropna(subset=["Name"])
+    df['Month'] = df['Month'].apply(clean_decimal)
+    df['DateStart'] = df['DateStart'].dt.strftime('%d/%m/%Y')
+    df['DateEnd']   = df['DateEnd'].dt.strftime('%d/%m/%Y')
+    df['LEFT'] = df['LEFT'].apply(clean_decimal)
+    df['DAYS'] = df['DAYS'].apply(clean_decimal)
+    df['LUNCH_UT'] = df['LUNCH_UT'].apply(format_vnd)
+    df['LUNCH_QT'] = df['LUNCH_QT'].apply(clean_decimal)
+    df['LUNCH_VALUE'] = df['LUNCH_VALUE'].apply(format_vnd)
+    df['TUITION_VALUE'] = df['TUITION_VALUE'].apply(format_vnd)
+    df['BOARDING_VALUE'] = df['BOARDING_VALUE'].apply(format_vnd)
+    df['CLEANING_VALUE'] = df['CLEANING_VALUE'].apply(format_vnd)
+    df['CAMERA_VALUE'] = df['CAMERA_VALUE'].apply(format_vnd)
+    df['OVERTIME_UT'] = df['OVERTIME_UT'].apply(format_vnd)
+    df['OVERTIME_QT'] = df['OVERTIME_QT'].apply(clean_decimal)
+    df['OVERTIME_VALUE'] = df['OVERTIME_VALUE'].apply(format_vnd)
+    df['TOTAL'] = df['TOTAL'].apply(format_vnd)
+
+    today = date.today()
+    df['DAY_CURRENT'] = today.day
+    df['MONTH_CURRENT'] = today.month
+    df['YEAR_CURRENT'] = today.year
     return df
 
 
@@ -82,6 +108,9 @@ def generate_bills_from_html(excel_path, template_path, output_folder):
         # Embed font dynamically
         font_url = f"file:///{TEMP_FONT_PATH.replace(os.sep, '/').replace(' ', '%20')}"
         html_content = html_content.replace("../fonts/DejaVuSans.ttf", font_url)
+        qr_url = f"file:///{TEMP_QR_PATH.replace(os.sep, '/').replace(' ', '%20')}"
+        html_content = html_content.replace("../images/qr.png", qr_url)
+
 
         # Output file name
         student_name = no_accent_vietnamese(str(data.get("Name", f"Unknown")))

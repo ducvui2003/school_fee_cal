@@ -5,9 +5,10 @@ from src.const import (
     APP_NAME,
     APP_SIZE,
     TEMPLATE_FILE,
-    SETTINGS_FOLDER,
     DOWNLOAD_FOLDER,
+    SAMPLE_FILE,
 )
+import shutil
 from src.core import generate_bills_from_html, merge_pdfs_in_folder
 from src.settings import app_settings
 from src.utils import get_cur_datetime
@@ -59,16 +60,7 @@ def create_menu(root):
     settings_menu = tk.Menu(menubar, tearoff=0)
     menubar.add_cascade(label="Settings", menu=settings_menu)
 
-    def open_settings():
-        """Open settings dialog to select output folder."""
-        new_folder = filedialog.askdirectory(
-            title="Select default output folder", initialdir=SETTINGS_FOLDER
-        )
-        if new_folder:
-            app_settings.set('output_folder')
-            messagebox.showinfo("Settings Saved", f"New output folder:\n{new_folder}")
-
-    settings_menu.add_command(label="Set Output Folder", command=open_settings)
+    settings_menu.add_command(label="Download sample file", command=download_local_file)
 
 
 def choose_file(label):
@@ -82,6 +74,32 @@ def choose_file(label):
         selected_excel_file = file_path
 
         label.config(text=os.path.basename(file_path))
+
+
+def download_local_file():
+    # file inside your project
+    src_path = SAMPLE_FILE
+
+    if not os.path.exists(src_path):
+        messagebox.showerror("Error", "Source file not found!")
+        return
+
+    # Choose where to save it
+    dest_path = filedialog.asksaveasfilename(
+        title="Save File As",
+        initialfile="sample.xlsx",
+        defaultextension=".xlsx",
+        filetypes=[("Excel Workbook", "*.xlsx"), ("All Files", "*.*")]
+    )
+
+    if not dest_path:
+        return  # user cancelled
+
+    try:
+        shutil.copyfile(src_path, dest_path)
+        messagebox.showinfo("Success", "File saved successfully!")
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to save: {e}")
 
 
 def create_main_window():
